@@ -17,5 +17,8 @@ func NewHandler(services *services.Service) *Handler {
 
 func (h *Handler) InitRoutes() *router.Router {
 	r := router.New()
+
+	r.PUT("/plugin", h.PluginsUpdateHandler)
+
 	return r
 }

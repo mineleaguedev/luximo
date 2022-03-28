@@ -1,5 +1,9 @@
 package services
 
+import (
+	"github.com/mineleaguedev/luximo/models"
+)
+
 type Velocity interface {
 }
 
@@ -7,6 +11,11 @@ type Paper interface {
 }
 
 type Plugin interface {
+	UpdatePlugins() error
+	GetPluginsInfo() ([]models.Plugin, error)
+	DownloadPlugin(pluginName, version string) (*[]byte, error)
+	UpdatePlugin(pluginName, version string, pluginFileBytes []byte) error
+	DeletePlugin(pluginName string) error
 }
 
 type Map interface {
@@ -35,6 +44,8 @@ type Service struct {
 	MegaServer
 }
 
-func NewService() *Service {
-	return &Service{}
+func NewService(paths models.Paths) *Service {
+	return &Service{
+		Plugin: NewPluginService(paths),
+	}
 }
