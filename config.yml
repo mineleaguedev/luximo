@@ -1,0 +1,10 @@
+path: "files/"
+velocity_path: "velocity/"
+paper_path: "paper/"
+plugins_path: "plugins/"
+maps_path: "maps/"
+servers_path: "servers/"
+lobby_servers_path: "lobby/"
+mini_servers_path: "mini/"
+mega_servers_path: "mega/"
+
