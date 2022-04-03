@@ -19,6 +19,7 @@ func (h *Handler) InitRoutes() *router.Router {
 	r := router.New()
 
 	r.PUT("/plugin", h.PluginsUpdateHandler)
+	r.PUT("/map", h.MapsUpdateHandler)
 
 	return r
 }

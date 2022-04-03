@@ -19,6 +19,12 @@ type Plugin interface {
 }
 
 type Map interface {
+	UpdateMaps() error
+	GetMapsInfo() ([]models.MiniGames, error)
+	DownloadMapWorld(minigame, format, minigameMap, version string) (*[]byte, error)
+	DownloadMapConfig(minigame, format, minigameMap, version string) (*[]byte, error)
+	UpdateMap(minigame, format, mapName, version string, mapWorldFileBytes, mapConfigFileBytes *[]byte) error
+	DeleteMap(minigameName, formatName, mapName string) error
 }
 
 type ProxyServer interface {
@@ -47,5 +53,6 @@ type Service struct {
 func NewService(paths models.Paths) *Service {
 	return &Service{
 		Plugin: NewPluginService(paths),
+		Map:    NewMapService(paths),
 	}
 }

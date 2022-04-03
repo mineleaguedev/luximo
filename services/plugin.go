@@ -23,7 +23,7 @@ func NewPluginService(paths models.Paths) *PluginService {
 func (s *PluginService) UpdatePlugins() error {
 	pluginsVersions := map[string]string{}
 
-	plugins, err := os.ReadDir("files/plugins")
+	plugins, err := os.ReadDir(s.paths.PluginsPath)
 	if err != nil {
 		return err
 	}
