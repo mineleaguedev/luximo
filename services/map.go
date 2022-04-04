@@ -41,6 +41,8 @@ func (s *MapService) UpdateMaps() error {
 		if err := s.addNewMaps(mapsInfo); err != nil {
 			return err
 		}
+
+		return nil
 	}
 
 	for _, minigame := range minigames {
@@ -112,7 +114,7 @@ func (s *MapService) UpdateMaps() error {
 	return nil
 }
 
-func (s *MapService) deleteOldAndWrongMaps(minigamesArr []models.MiniGames, mapsInfo []models.MiniGames) error {
+func (s *MapService) deleteOldAndWrongMaps(minigamesArr, mapsInfo []models.MiniGames) error {
 	for _, minigame := range minigamesArr {
 		var hasMinigame bool
 		for _, minigameInfo := range mapsInfo {
@@ -275,10 +277,6 @@ func (s *MapService) DownloadMapConfig(minigame, format, minigameMap, version st
 }
 
 func (s *MapService) UpdateMap(minigame, format, mapName, version string, mapWorldFileBytes, mapConfigFileBytes *[]byte) error {
-	if err := s.DeleteMap(minigame, format, mapName); err != nil {
-		return err
-	}
-
 	if mapWorldFileBytes != nil {
 		if err := os.MkdirAll(s.paths.MapsPath+minigame+"/"+format+"/"+mapName+"-"+version, 0755); err != nil {
 			return err
@@ -309,14 +307,6 @@ func (s *MapService) UpdateMap(minigame, format, mapName, version string, mapWor
 		if _, err = configFile.Write(*mapConfigFileBytes); err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (s *MapService) DeleteMap(minigameName, formatName, mapName string) error {
-	if err := os.RemoveAll(s.paths.MapsPath + minigameName + "/" + formatName + "/" + mapName); err != nil {
-		return err
 	}
 
 	return nil

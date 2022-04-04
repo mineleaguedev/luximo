@@ -21,7 +21,12 @@ func NewPluginService(paths models.Paths) *PluginService {
 }
 
 func (s *PluginService) UpdatePlugins() error {
-	pluginsVersions := map[string]string{}
+	var pluginsArr []models.Plugin
+
+	pluginsInfo, err := s.GetPluginsInfo()
+	if err != nil {
+		return err
+	}
 
 	plugins, err := os.ReadDir(s.paths.PluginsPath)
 	if err != nil {
@@ -29,58 +34,78 @@ func (s *PluginService) UpdatePlugins() error {
 	}
 
 	if len(plugins) == 0 {
-		return s.update(pluginsVersions)
+		if err := s.deleteOldAndWrongPlugins(pluginsArr, pluginsInfo); err != nil {
+			return err
+		}
+
+		if err := s.addNewPlugins(pluginsInfo); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	var pluginsToDelete []string
-
 	for _, plugin := range plugins {
-		pluginFileName := strings.Split(plugin.Name(), "-")
-		pluginName := pluginFileName[0]
-
-		if _, ok := pluginsVersions[pluginName]; ok {
-			pluginsToDelete = append(pluginsToDelete, pluginName)
+		if !strings.Contains(plugin.Name(), ".jar") {
+			if err := os.RemoveAll(s.paths.PluginsPath + plugin.Name()); err != nil {
+				return err
+			}
 			continue
 		}
 
+		pluginFileName := strings.Split(plugin.Name(), "-")
+		pluginName := pluginFileName[0]
 		pluginVersion := strings.ReplaceAll(pluginFileName[1], ".jar", "")
-		pluginsVersions[pluginName] = pluginVersion
+
+		pluginsArr = append(pluginsArr, models.Plugin{
+			Name:        pluginName,
+			Versions:    nil,
+			LastVersion: pluginVersion,
+		})
 	}
 
-	for _, pluginToDelete := range pluginsToDelete {
-		delete(pluginsVersions, pluginToDelete)
-	}
-
-	return s.update(pluginsVersions)
-}
-
-func (s *PluginService) update(plugins map[string]string) error {
-	pluginsInfo, err := s.GetPluginsInfo()
-	if err != nil {
+	if err := s.deleteOldAndWrongPlugins(pluginsArr, pluginsInfo); err != nil {
 		return err
 	}
 
-	for _, pluginInfo := range pluginsInfo {
-		var pluginVersion *string
-		for pluginName, pVersion := range plugins {
-			if strings.Contains(pluginName, pluginInfo.Name) {
-				ver := strings.ReplaceAll(pVersion, ".jar", "")
-				pluginVersion = &ver
-				break
+	if err := s.addNewPlugins(pluginsInfo); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *PluginService) deleteOldAndWrongPlugins(plugins, pluginsInfo []models.Plugin) error {
+	for _, plugin := range plugins {
+		var hasPlugin bool
+		for _, pluginInfo := range pluginsInfo {
+			if plugin.Name == pluginInfo.Name && plugin.LastVersion == pluginInfo.LastVersion {
+				hasPlugin = true
 			}
 		}
 
-		if pluginVersion != nil && pluginInfo.LastVersion == *pluginVersion {
-			continue
+		if !hasPlugin {
+			if err := os.RemoveAll(s.paths.PluginsPath + plugin.Name + "-" + plugin.LastVersion + ".jar"); err != nil {
+				return err
+			}
 		}
+	}
 
-		pluginFileBytes, err := s.DownloadPlugin(pluginInfo.Name, pluginInfo.LastVersion)
-		if err != nil {
-			return err
-		}
+	return nil
+}
 
-		if err := s.UpdatePlugin(pluginInfo.Name, pluginInfo.LastVersion, *pluginFileBytes); err != nil {
-			return err
+func (s *PluginService) addNewPlugins(pluginsInfo []models.Plugin) error {
+	for _, pluginInfo := range pluginsInfo {
+		_, err := os.Stat(s.paths.PluginsPath + pluginInfo.Name + "-" + pluginInfo.LastVersion + ".jar")
+		if os.IsNotExist(err) {
+			pluginFileBytes, err := s.DownloadPlugin(pluginInfo.Name, pluginInfo.LastVersion)
+			if err != nil {
+				return err
+			}
+
+			if err := s.UpdatePlugin(pluginInfo.Name, pluginInfo.LastVersion, *pluginFileBytes); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -142,10 +167,6 @@ func (s *PluginService) DownloadPlugin(pluginName, version string) (*[]byte, err
 }
 
 func (s *PluginService) UpdatePlugin(pluginName, version string, pluginFileBytes []byte) error {
-	if err := s.DeletePlugin(pluginName); err != nil {
-		return err
-	}
-
 	file, err := os.Create(s.paths.PluginsPath + pluginName + "-" + version + ".jar")
 	if err != nil {
 		return err
@@ -154,25 +175,6 @@ func (s *PluginService) UpdatePlugin(pluginName, version string, pluginFileBytes
 
 	if _, err = file.Write(pluginFileBytes); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (s *PluginService) DeletePlugin(pluginName string) error {
-	plugins, err := os.ReadDir(s.paths.PluginsPath)
-	if err != nil {
-		return err
-	}
-
-	for _, plugin := range plugins {
-		if !strings.Contains(plugin.Name(), pluginName) {
-			continue
-		}
-
-		if err := os.RemoveAll(s.paths.PluginsPath + plugin.Name()); err != nil {
-			return err
-		}
 	}
 
 	return nil

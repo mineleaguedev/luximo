@@ -15,7 +15,6 @@ type Plugin interface {
 	GetPluginsInfo() ([]models.Plugin, error)
 	DownloadPlugin(pluginName, version string) (*[]byte, error)
 	UpdatePlugin(pluginName, version string, pluginFileBytes []byte) error
-	DeletePlugin(pluginName string) error
 }
 
 type Map interface {
@@ -24,7 +23,6 @@ type Map interface {
 	DownloadMapWorld(minigame, format, minigameMap, version string) (*[]byte, error)
 	DownloadMapConfig(minigame, format, minigameMap, version string) (*[]byte, error)
 	UpdateMap(minigame, format, mapName, version string, mapWorldFileBytes, mapConfigFileBytes *[]byte) error
-	DeleteMap(minigameName, formatName, mapName string) error
 }
 
 type ProxyServer interface {
