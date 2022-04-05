@@ -5,6 +5,10 @@ import (
 )
 
 type Velocity interface {
+	UpdateVelocity() error
+	GetVelocityVersionsInfo() (*models.VelocityResponse, error)
+	DownloadVelocity(version string) (*[]byte, error)
+	UpdateVelocityVersion(version string, velocityFileBytes []byte) error
 }
 
 type Paper interface {
@@ -50,7 +54,8 @@ type Service struct {
 
 func NewService(paths models.Paths) *Service {
 	return &Service{
-		Plugin: NewPluginService(paths),
-		Map:    NewMapService(paths),
+		Plugin:   NewPluginService(paths),
+		Map:      NewMapService(paths),
+		Velocity: NewVelocityService(paths),
 	}
 }

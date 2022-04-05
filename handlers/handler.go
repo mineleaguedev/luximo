@@ -20,6 +20,7 @@ func (h *Handler) InitRoutes() *router.Router {
 
 	r.PUT("/plugin", h.PluginsUpdateHandler)
 	r.PUT("/map", h.MapsUpdateHandler)
+	r.PUT("/velocity", h.VelocityUpdateHandler)
 
 	return r
 }
