@@ -12,6 +12,10 @@ type Velocity interface {
 }
 
 type Paper interface {
+	UpdatePaper() error
+	GetPaperVersionsInfo() (*models.PaperResponse, error)
+	DownloadPaper(version string) (*[]byte, error)
+	UpdatePaperVersion(version string, paperFileBytes []byte) error
 }
 
 type Plugin interface {
@@ -57,5 +61,6 @@ func NewService(paths models.Paths) *Service {
 		Plugin:   NewPluginService(paths),
 		Map:      NewMapService(paths),
 		Velocity: NewVelocityService(paths),
+		Paper:    NewPaperService(paths),
 	}
 }
